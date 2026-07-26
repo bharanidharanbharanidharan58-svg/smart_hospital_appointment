@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Directory - Admin Portal{% endblock %}
+
+{% block header_title %}Patient Records & Medical History Directory{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <h2 style="font-size: 22px; font-weight: 800;">Registered Patients Directory ({{ patients|length }})</h2>
+</div>
+
+<div class="glass-panel" style="padding: 24px;">
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient Name</th>
+                    <th>Age / Gender</th>
+                    <th>Blood Group</th>
+                    <th>Contact Phone</th>
+                    <th>Email Address</th>
+                    <th>Medical History Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                    <tr>
+                        <td>#{{ p.id }}</td>
+                        <td><strong style="font-size: 15px;">{{ p.name }}</strong></td>
+                        <td>{{ p.age }} yrs / {{ p.gender }}</td>
+                        <td><strong style="color: var(--danger);">{{ p.blood_group }}</strong></td>
+                        <td>{{ p.phone }}</td>
+                        <td>{{ p.email }}</td>
+                        <td><span style="font-size: 13px; color: var(--text-muted);">{{ p.medical_history_summary or 'None' }}</span></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

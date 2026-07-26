@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Doctors - Admin Portal{% endblock %}
+
+{% block header_title %}Medical Specialists Management (40+ Active Doctors){% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h2 style="font-size: 22px; font-weight: 800;">Registered Super Specialists ({{ doctors|length }})</h2>
+        <p style="font-size: 14px; color: var(--text-muted);">Manage doctor profiles, consultation fees, and hospital assignments</p>
+    </div>
+    <button onclick="document.getElementById('add-doctor-modal').style.display='block'" class="btn btn-primary">
+        <i class="fas fa-user-md"></i> Register New Doctor
+    </button>
+</div>
+
+<!-- Doctors Table -->
+<div class="glass-panel" style="padding: 24px;">
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Doctor Name</th>
+                    <th>Hospital Branch</th>
+                    <th>Specialty</th>
+                    <th>Fee</th>
+                    <th>Rating</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in doctors %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="{{ doc.photo }}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;">
+                                <div>
+                                    <strong style="font-size: 14px;">Dr. {{ doc.name }}</strong><br>
+                                    <span style="font-size: 11px; color: var(--text-muted);">{{ doc.qualification }} • {{ doc.experience }} Yrs</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ doc.hospital_name }}</td>
+                        <td><span class="badge badge-info">{{ doc.department_name }}</span></td>
+                        <td>₹{{ doc.consultation_fee }}</td>
+                        <td>⭐ {{ doc.rating }}</td>
+                        <td>
+                            {% if doc.status == 'Online' %}
+                                <span class="badge badge-success">Online</span>
+                            {% elif doc.status == 'Busy' %}
+                                <span class="badge badge-warning">Busy</span>
+                            {% else %}
+                                <span class="badge badge-danger">On Leave</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('admin.doctors') }}" method="POST" onsubmit="return confirm('Remove doctor profile?');">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="doctor_id" value="{{ doc.id }}">
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Doctor Modal -->
+<div id="add-doctor-modal" class="glass-panel" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; max-width: 90%; max-height: 85vh; overflow-y: auto; z-index: 9999; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-weight: 800; font-size: 20px;"><i class="fas fa-user-md"></i> Register Specialist Doctor</h3>
+        <i onclick="document.getElementById('add-doctor-modal').style.display='none'" class="fas fa-times" style="cursor: pointer; font-size: 20px;"></i>
+    </div>
+
+    <form action="{{ url_for('admin.doctors') }}" method="POST">
+        <input type="hidden" name="action" value="create">
+        
+        <div class="form-group">
+            <label>Doctor Full Name</label>
+            <input type="text" name="name" class="form-control" placeholder="Dr. Swaminathan" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label>Email (Login Username)</label>
+                <input type="email" name="email" class="form-control" placeholder="dr.swami@aurahealth.com" required>
+            </div>
+            <div class="form-group">
+                <label>Hospital Branch</label>
+                <select name="hospital_id" class="form-control" required>
+                    {% for h in hospitals %}
+                        <option value="{{ h.id }}">{{ h.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label>Department</label>
+                <select name="department_id" class="form-control" required>
+                    {% for dep in departments %}
+                        <option value="{{ dep.id }}">{{ dep.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Consultation Fee (₹)</label>
+                <input type="number" name="consultation_fee" class="form-control" value="800" min="100" required>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label>Qualifications</label>
+                <input type="text" name="qualification" class="form-control" placeholder="MD, DM (Cardiology), FACC" required>
+            </div>
+            <div class="form-group">
+                <label>Years of Experience</label>
+                <input type="number" name="experience" class="form-control" value="12" min="1" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Specialization Title</label>
+            <input type="text" name="specialization" class="form-control" placeholder="Interventional Cardiologist & Valve Specialist" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+            <i class="fas fa-check-circle"></i> Save Doctor Record
+        </button>
+    </form>
+</div>
+{% endblock %}

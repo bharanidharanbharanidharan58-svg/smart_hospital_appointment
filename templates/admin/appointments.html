@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Appointments - Admin Portal{% endblock %}
+
+{% block header_title %}System-Wide Appointments & Token Manager{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <h2 style="font-size: 22px; font-weight: 800;">All System Appointments ({{ appointments|length }})</h2>
+</div>
+
+<div class="glass-panel" style="padding: 24px;">
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Ref & Token</th>
+                    <th>Patient</th>
+                    <th>Hospital & Doctor</th>
+                    <th>Date & Slot</th>
+                    <th>Fee</th>
+                    <th>Status Override</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for apt in appointments %}
+                    <tr>
+                        <td>
+                            <strong style="color: var(--primary); font-size: 15px;">{{ apt.token_number }}</strong><br>
+                            <span style="font-size: 11px; color: var(--text-muted);">{{ apt.appointment_number }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ apt.patient_name }}</strong>
+                        </td>
+                        <td>
+                            <div>{{ apt.hospital_name }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Dr. {{ apt.doctor_name }} ({{ apt.department_name }})</div>
+                        </td>
+                        <td>
+                            <div>{{ apt.appointment_date }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">{{ apt.time_slot }}</div>
+                        </td>
+                        <td>₹{{ apt.consultation_fee }}</td>
+                        <td>
+                            <form action="{{ url_for('admin.appointments') }}" method="POST" style="display: flex; gap: 6px;">
+                                <input type="hidden" name="appointment_id" value="{{ apt.id }}">
+                                <select name="status" class="form-control" style="width: 120px; padding: 4px 8px; font-size: 12px;" onchange="this.form.submit()">
+                                    <option value="Pending" {% if apt.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                    <option value="Approved" {% if apt.status == 'Approved' %}selected{% endif %}>Approved</option>
+                                    <option value="Completed" {% if apt.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                    <option value="Cancelled" {% if apt.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                    <option value="Rejected" {% if apt.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

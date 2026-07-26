@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Enterprise Analytics - Aura Health{% endblock %}
+
+{% block header_title %}System Enterprise Command & Analytics Dashboard{% endblock %}
+
+{% block content %}
+<!-- Top Metrics Grid -->
+<div class="grid-4" style="margin-bottom: 32px;">
+    <div class="glass-panel stat-card">
+        <div class="stat-icon"><i class="fas fa-hospital"></i></div>
+        <div>
+            <div class="stat-val">{{ hospitals|length }}</div>
+            <div class="stat-label">Registered Hospitals</div>
+        </div>
+    </div>
+    <div class="glass-panel stat-card">
+        <div class="stat-icon" style="background: rgba(16,185,129,0.15); color: #10b981;"><i class="fas fa-user-md"></i></div>
+        <div>
+            <div class="stat-val">{{ doctors|length }}</div>
+            <div class="stat-label">Active Doctors</div>
+        </div>
+    </div>
+    <div class="glass-panel stat-card">
+        <div class="stat-icon" style="background: rgba(6,182,212,0.15); color: #06b6d4;"><i class="fas fa-users"></i></div>
+        <div>
+            <div class="stat-val">{{ patients|length }}</div>
+            <div class="stat-label">Registered Patients</div>
+        </div>
+    </div>
+    <div class="glass-panel stat-card">
+        <div class="stat-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;"><i class="fas fa-wallet"></i></div>
+        <div>
+            <div class="stat-val">₹{{ "%.0f"|format(total_revenue) }}</div>
+            <div class="stat-label">Total Revenue Generated</div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Visualizations -->
+<div class="grid-2" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px;">
+    <!-- Revenue Bar Chart -->
+    <div class="glass-panel" style="padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;"><i class="fas fa-chart-bar"></i> Hospital Revenue Breakdown (₹)</h3>
+        <canvas id="revenueChart" height="220"></canvas>
+    </div>
+
+    <!-- Department Doughnut Chart -->
+    <div class="glass-panel" style="padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;"><i class="fas fa-chart-pie"></i> Specialty Patient Share</h3>
+        <canvas id="deptChart" height="220"></canvas>
+    </div>
+</div>
+
+<!-- Recent Appointments & Hospital Performance Table -->
+<div class="glass-panel" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 700;"><i class="fas fa-list-alt"></i> Recent Network Appointments</h3>
+        <a href="{{ url_for('admin.appointments') }}" class="btn btn-outline btn-sm">View All {{ appointments|length }} Records</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Ref #</th>
+                    <th>Patient</th>
+                    <th>Hospital Branch</th>
+                    <th>Doctor</th>
+                    <th>Date & Slot</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for apt in appointments[:6] %}
+                    <tr>
+                        <td><strong>{{ apt.appointment_number }}</strong></td>
+                        <td>{{ apt.patient_name }}</td>
+                        <td>{{ apt.hospital_name }}</td>
+                        <td>Dr. {{ apt.doctor_name }}</td>
+                        <td>{{ apt.appointment_date }} ({{ apt.time_slot }})</td>
+                        <td>₹{{ apt.consultation_fee }}</td>
+                        <td>
+                            {% if apt.status == 'Approved' or apt.status == 'Completed' %}
+                                <span class="badge badge-success">{{ apt.status }}</span>
+                            {% else %}
+                                <span class="badge badge-warning">{{ apt.status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin_charts.js') }}"></script>
+{% endblock %}

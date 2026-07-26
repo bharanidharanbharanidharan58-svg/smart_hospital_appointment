@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }} - Enterprise Smart Hospital Network{% endblock %}</title>
+    
+    <!-- Google Fonts & Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div>
+                <a href="{{ url_for('index') }}" class="brand-logo">
+                    <i class="fas fa-hospital-alt"></i>
+                    <span>Aura Health</span>
+                </a>
+                
+                <ul class="nav-menu">
+                    <li class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+                        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home Page</a>
+                    </li>
+                    
+                    {% if session.get('role') == 'patient' %}
+                        <li class="nav-item {% if request.endpoint == 'patient.dashboard' %}active{% endif %}">
+                            <a href="{{ url_for('patient.dashboard') }}"><i class="fas fa-chart-line"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item {% if request.endpoint == 'patient.book_appointment' %}active{% endif %}">
+                            <a href="{{ url_for('patient.book_appointment') }}"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+                        </li>
+                        <li class="nav-item {% if request.endpoint == 'patient.ai_symptom' %}active{% endif %}">
+                            <a href="{{ url_for('patient.ai_symptom') }}"><i class="fas fa-robot"></i> AI Symptom Checker</a>
+                        </li>
+                        <li class="nav-item {% if request.endpoint == 'patient.history' %}active{% endif %}">
+                            <a href="{{ url_for('patient.history') }}"><i class="fas fa-file-medical"></i> Medical Records</a>
+                        </li>
+                    {% elif session.get('role') == 'doctor' %}
+                        <li class="nav-item {% if request.endpoint == 'doctor.dashboard' %}active{% endif %}">
+                            <a href="{{ url_for('doctor.dashboard') }}"><i class="fas fa-user-clock"></i> Today's Queue</a>
+                        </li>
+                        <li class="nav-item {% if request.endpoint == 'doctor.profile' %}active{% endif %}">
+                            <a href="{{ url_for('doctor.profile') }}"><i class="fas fa-user-md"></i> Doctor Profile</a>
+                        </li>
+                    {% elif session.get('role') == 'admin' %}
+                        <li class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                            <a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-chart-pie"></i> Enterprise Analytics</a>
+                        </li>
+                        <li class="nav-item {% if request.endpoint == 'admin.hospitals' %}active{% endif %}">
+                            <a href="{{ url_for('admin.hospitals') }}"><i class="fas fa-hospital"></i> Manage Hospitals</a>
+                        </li>
+                        <li class="nav-item {% if request.endpoint == 'admin.doctors' %}active{% endif %}">
+                            <a href="{{ url_for('admin.doctors') }}"><i class="fas fa-user-md"></i> Manage Doctors</a>
+                        </li>
+                        <li class="nav-item {% if request.endpoint == 'admin.patients' %}active{% endif %}">
+                            <a href="{{ url_for('admin.patients') }}"><i class="fas fa-users"></i> Patient Records</a>
+                        </li>
+                        <li class="nav-item {% if request.endpoint == 'admin.appointments' %}active{% endif %}">
+                            <a href="{{ url_for('admin.appointments') }}"><i class="fas fa-list-alt"></i> All Appointments</a>
+                        </li>
+                        <li class="nav-item {% if request.endpoint == 'admin.settings' %}active{% endif %}">
+                            <a href="{{ url_for('admin.settings') }}"><i class="fas fa-cog"></i> System Settings</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <div style="padding-top: 20px; border-top: 1px solid var(--card-border);">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <button id="theme-toggle-btn" class="btn btn-outline btn-sm" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-moon"></i> Toggle Dark Theme
+                    </button>
+                </div>
+                {% if session.get('user_id') %}
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-danger btn-sm" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-sign-out-alt"></i> Logout ({{ user_name }})
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-sign-in-alt"></i> Portal Login
+                    </a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Navbar -->
+            <header class="top-navbar glass-panel">
+                <div>
+                    <h2 style="font-size: 20px; font-weight: 700; color: var(--text-main);">
+                        {% block header_title %}Smart Hospital Management Platform{% endblock %}
+                    </h2>
+                    <span style="font-size: 13px; color: var(--text-muted);">
+                        <i class="fas fa-phone-alt" style="color: var(--emergency);"></i> 24x7 Emergency Helpline: <strong>108 / 1800-425-AURA</strong>
+                    </span>
+                </div>
+                
+                <div class="user-profile">
+                    {% if session.get('user_id') %}
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; font-size: 14px;">{{ user_name }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">{{ user_role }} Portal</div>
+                        </div>
+                        <div class="avatar" style="background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                            {{ user_name[0] }}
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-sm">Patient Login</a>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
+                    {% endif %}
+                </div>
+            </header>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                showToast("{{ message }}", "{{ category }}");
+                            });
+                        </script>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Floating AI Voice Chatbot Modal -->
+    <div id="ai-chatbot-toggle" class="ai-chatbot-btn floating-anim" title="Aura Health AI Assistant">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <div id="ai-chat-window" class="ai-chat-window glass-panel">
+        <div class="ai-chat-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-robot" style="font-size: 20px;"></i>
+                <div>
+                    <div style="font-weight: 700; font-size: 14px;">Aura Voice & AI Assistant</div>
+                    <div style="font-size: 11px; opacity: 0.8;">English & Tamil Healthcare NLP</div>
+                </div>
+            </div>
+            <i id="ai-chat-close" class="fas fa-times" style="cursor: pointer; font-size: 18px;"></i>
+        </div>
+        
+        <div id="ai-chat-body" class="ai-chat-body">
+            <div class="chat-msg bot">
+                👋 Hello {{ user_name or 'Patient' }}! I am your Aura AI Assistant. You can ask about symptoms, top doctors, or book appointments in English or தமிழ்.
+            </div>
+        </div>
+        
+        <div class="ai-chat-footer">
+            <input type="text" id="ai-chat-input" class="form-control" placeholder="Ask AI or type symptoms...">
+            <button id="ai-chat-send" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai_assistant.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

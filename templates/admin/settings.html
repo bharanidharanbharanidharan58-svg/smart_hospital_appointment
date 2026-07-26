@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - Admin Portal{% endblock %}
+
+{% block header_title %}Aura Health Global System Settings{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 0 auto;">
+    <div class="glass-panel" style="padding: 32px;">
+        <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 20px;"><i class="fas fa-sliders-h"></i> System Configuration Settings</h3>
+
+        <form action="{{ url_for('admin.settings') }}" method="POST">
+            <div class="form-group">
+                <label>Platform Name</label>
+                <input type="text" name="system_name" class="form-control" value="{{ settings.get('system_name', 'Aura Health Enterprise') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>24x7 Emergency Helpline Hotline</label>
+                <input type="text" name="emergency_helpline" class="form-control" value="{{ settings.get('emergency_helpline', '108 / 1800-425-AURA') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Billing Currency</label>
+                <input type="text" name="currency" class="form-control" value="{{ settings.get('currency', 'INR (₹)') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>AI Symptom Checker Engine</label>
+                <select name="ai_symptom_checker" class="form-control">
+                    <option value="Enabled" {% if settings.get('ai_symptom_checker') == 'Enabled' %}selected{% endif %}>Enabled (Active)</option>
+                    <option value="Disabled" {% if settings.get('ai_symptom_checker') == 'Disabled' %}selected{% endif %}>Disabled</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Web Speech API Voice Assistant</label>
+                <select name="voice_assistant" class="form-control">
+                    <option value="Enabled" {% if settings.get('voice_assistant') == 'Enabled' %}selected{% endif %}>Enabled (English + Tamil NLP)</option>
+                    <option value="Disabled" {% if settings.get('voice_assistant') == 'Disabled' %}selected{% endif %}>Disabled</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; margin-top: 10px;">
+                <i class="fas fa-save"></i> Save Global Settings
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Consultation - {{ patient.name }}{% endblock %}
+
+{% block header_title %}Patient Consultation & E-Prescription Desk{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <!-- Patient Profile Header -->
+    <div class="glass-panel" style="padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <span class="badge badge-info" style="margin-bottom: 6px;">Token: {{ appointment.token_number }}</span>
+            <h2 style="font-size: 22px; font-weight: 800;">{{ patient.name }}</h2>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                Age: {{ patient.age }} yrs • Gender: {{ patient.gender }} • Blood Group: <strong style="color: var(--danger);">{{ patient.blood_group }}</strong> • Contact: {{ patient.phone }}
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-weight: 700; font-size: 14px; color: var(--primary);">Slot: {{ appointment.time_slot }}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Ref: {{ appointment.appointment_number }}</div>
+        </div>
+    </div>
+
+    <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+        <!-- Left: Symptoms & Past History -->
+        <div>
+            <div class="glass-panel" style="padding: 20px; margin-bottom: 20px;">
+                <h4 style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 8px;"><i class="fas fa-file-medical-alt"></i> Reported Symptoms Today</h4>
+                <p style="font-size: 14px; color: var(--text-main);">{{ appointment.symptoms or 'General checkup / No specific symptom reported.' }}</p>
+            </div>
+
+            <div class="glass-panel" style="padding: 20px;">
+                <h4 style="font-size: 16px; font-weight: 700; color: var(--secondary); margin-bottom: 12px;"><i class="fas fa-history"></i> Patient Medical History</h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">{{ patient.medical_history_summary or 'No chronic conditions reported.' }}</p>
+
+                {% if patient_history %}
+                    <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Previous Prescriptions ({{ patient_history|length }}):</div>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                        {% for h in patient_history %}
+                            <li style="background: var(--card-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--card-border); font-size: 12px;">
+                                <strong>{{ h.appointment_date }}:</strong> {{ h.diagnosis }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right: Prescription & Diagnosis Form -->
+        <div class="glass-panel" style="padding: 24px;">
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px;"><i class="fas fa-prescription"></i> Issue Digital Prescription</h3>
+
+            <form action="{{ url_for('doctor.consultation', appointment_id=appointment.id) }}" method="POST">
+                <div class="form-group">
+                    <label>Clinical Diagnosis</label>
+                    <input type="text" name="diagnosis" class="form-control" placeholder="e.g. Acute Viral Fever & Dehydration" value="{{ existing_note.diagnosis if existing_note else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Prescribed Medicines & Dosage Instructions</label>
+                    <textarea name="prescription" class="form-control" rows="5" placeholder="1. Tab Paracetamol 650mg - 1-0-1 (3 days)&#10;2. Tab Pantocid 40mg - 1-0-0 before food&#10;3. ORS hydration solution" required>{{ existing_note.prescription if existing_note else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Advised Lab Tests (Optional)</label>
+                    <input type="text" name="lab_tests" class="form-control" placeholder="e.g. Complete Blood Count (CBC), Dengue NS1" value="{{ existing_note.lab_tests if existing_note else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Follow-Up Date (Optional)</label>
+                    <input type="date" name="follow_up_date" class="form-control" value="{{ existing_note.follow_up_date if existing_note else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Doctor Clinical Notes (Internal)</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="Dietary restrictions, rest advised...">{{ existing_note.notes if existing_note else '' }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
+                    <i class="fas fa-save"></i> Save Prescription & Complete Consultation
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Book Appointment - Aura Health{% endblock %}
+
+{% block header_title %}Interactive Appointment Booking Wizard{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <div class="glass-panel" style="padding: 32px; margin-bottom: 24px;">
+        <div style="margin-bottom: 24px;">
+            <span class="badge badge-info" style="margin-bottom: 8px;">Step-by-Step Flow</span>
+            <h2 style="font-size: 24px; font-weight: 800;">Hospital Appointment & Smart Token Generator</h2>
+            <p style="font-size: 14px; color: var(--text-muted);">Prevent double booking with automated queue slot validation</p>
+        </div>
+
+        <form action="{{ url_for('patient.book_appointment') }}" method="POST" id="appointment_booking_form">
+            <div class="grid-3" style="margin-bottom: 20px;">
+                <!-- Step 1: Hospital -->
+                <div class="form-group">
+                    <label><i class="fas fa-hospital"></i> 1. Select Hospital Branch</label>
+                    <select name="hospital_id" id="booking_hospital_id" class="form-control" required>
+                        <option value="">-- Choose Hospital --</option>
+                        {% for h in hospitals %}
+                            <option value="{{ h.id }}" {% if selected_hosp == h.id %}selected{% endif %}>
+                                {{ h.name }} ({{ h.city }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Step 2: Department -->
+                <div class="form-group">
+                    <label><i class="fas fa-stethoscope"></i> 2. Department / Specialty</label>
+                    <select name="department_id" id="booking_department_id" class="form-control" required>
+                        <option value="">-- Choose Department --</option>
+                        {% for dep in departments %}
+                            <option value="{{ dep.id }}" {% if selected_dept == dep.id %}selected{% endif %}>
+                                {{ dep.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Step 3: Doctor -->
+                <div class="form-group">
+                    <label><i class="fas fa-user-md"></i> 3. Select Specialist Doctor</label>
+                    <select name="doctor_id" id="booking_doctor_id" class="form-control" required>
+                        <option value="">-- Select Doctor --</option>
+                        {% for doc in doctors %}
+                            <option value="{{ doc.id }}" data-fee="{{ doc.consultation_fee }}">
+                                Dr. {{ doc.name }} ({{ doc.specialization }}) - ₹{{ doc.consultation_fee }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                <!-- Step 4: Date -->
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-day"></i> 4. Preferred Appointment Date</label>
+                    <input type="date" name="appointment_date" id="booking_date" class="form-control" required>
+                </div>
+
+                <!-- Consultation Fee & AI Slot Rec -->
+                <div class="form-group">
+                    <label><i class="fas fa-magic"></i> AI Slot Assistance & Fee</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" id="ai_recommend_slot_btn" class="btn btn-outline btn-sm" style="flex: 1;">
+                            <i class="fas fa-sparkles"></i> AI Best Slot
+                        </button>
+                        <div style="font-weight: 700; font-size: 18px; color: var(--primary);" id="consultation_fee_display">
+                            ₹500.00
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Time Slots Grid -->
+            <div class="form-group">
+                <label><i class="fas fa-clock"></i> 5. Available Time Slots (Click to Select)</label>
+                <input type="hidden" name="time_slot" id="selected_time_slot" required>
+                <div id="slots_grid_container" style="display: flex; gap: 10px; flex-wrap: wrap; padding: 14px; background: var(--primary-light); border-radius: var(--radius-sm); min-height: 70px; align-items: center;">
+                    <span class="text-muted" style="font-size: 13px;">Please select hospital, doctor, and date above to load live time slots.</span>
+                </div>
+            </div>
+
+            <!-- Symptoms Input -->
+            <div class="form-group">
+                <label><i class="fas fa-notes-medical"></i> Reported Symptoms / Consultation Purpose (Optional)</label>
+                <textarea name="symptoms" class="form-control" rows="2" placeholder="e.g. Mild fever since 2 days, headache, or routine checkup"></textarea>
+            </div>
+
+            <!-- Smart Token Preview Box -->
+            <div id="token_preview_box" class="glass-panel" style="display: none; padding: 16px; margin-bottom: 20px; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: var(--success);"><i class="fas fa-check-circle"></i> Slot Available & Validated</strong>
+                        <div style="font-size: 13px; color: var(--text-muted);">Double booking check passed. Smart Token & Queue Ticket will be generated instantly upon confirmation.</div>
+                    </div>
+                    <span class="badge badge-success">Slot Reserved</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;">
+                <i class="fas fa-ticket-alt"></i> Confirm Booking & Generate Token
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Hospitals - Admin Portal{% endblock %}
+
+{% block header_title %}Multi-Hospital Network Branch Management{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h2 style="font-size: 22px; font-weight: 800;">Connected Hospital Branches ({{ hospitals|length }})</h2>
+        <p style="font-size: 14px; color: var(--text-muted);">Add new hospital branches or edit existing network infrastructure</p>
+    </div>
+    <button onclick="document.getElementById('add-hosp-modal').style.display='block'" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> Add New Hospital Branch
+    </button>
+</div>
+
+<!-- Hospitals Grid -->
+<div class="grid-3">
+    {% for hosp in hospitals %}
+        <div class="glass-panel hospital-card">
+            <div class="card-banner" style="background-image: url('{{ hosp.banner }}');">
+                <span class="badge badge-info" style="position: absolute; top: 12px; right: 12px;">Code: {{ hosp.code }}</span>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <img src="{{ hosp.logo }}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+                    <div>
+                        <h4 style="font-size: 16px; font-weight: 700;">{{ hosp.name }}</h4>
+                        <span style="font-size: 12px; color: var(--text-muted);"><i class="fas fa-map-marker-alt"></i> {{ hosp.city }}</span>
+                    </div>
+                </div>
+
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+                    <div><i class="fas fa-phone"></i> {{ hosp.phone }}</div>
+                    <div><i class="fas fa-envelope"></i> {{ hosp.email }}</div>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                    <span class="badge badge-warning">{{ hosp.total_beds }} Beds</span>
+                    <span class="badge badge-info">{{ hosp.total_doctors }} Doctors</span>
+                    <span class="badge badge-success">⭐ {{ hosp.rating }}</span>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <form action="{{ url_for('admin.hospitals') }}" method="POST" style="flex: 1;" onsubmit="return confirm('Delete this hospital branch?');">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="hospital_id" value="{{ hosp.id }}">
+                        <button type="submit" class="btn btn-danger btn-sm" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Add Hospital Modal -->
+<div id="add-hosp-modal" class="glass-panel" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; max-width: 90%; max-height: 85vh; overflow-y: auto; z-index: 9999; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-weight: 800; font-size: 20px;"><i class="fas fa-hospital-symbol"></i> Register Hospital Branch</h3>
+        <i onclick="document.getElementById('add-hosp-modal').style.display='none'" class="fas fa-times" style="cursor: pointer; font-size: 20px;"></i>
+    </div>
+
+    <form action="{{ url_for('admin.hospitals') }}" method="POST">
+        <input type="hidden" name="action" value="create">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label>Hospital Name</label>
+                <input type="text" name="name" class="form-control" placeholder="e.g. Fortis Healthcare" required>
+            </div>
+            <div class="form-group">
+                <label>Branch Short Code (3 letters)</label>
+                <input type="text" name="code" class="form-control" placeholder="FOR" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Full Address</label>
+            <input type="text" name="address" class="form-control" placeholder="123 Health Ave, City" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label>City</label>
+                <input type="text" name="city" class="form-control" placeholder="Chennai / Coimbatore" required>
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone" class="form-control" placeholder="+91 44 1234567" required>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" class="form-control" placeholder="info@fortis.com" required>
+            </div>
+            <div class="form-group">
+                <label>Emergency Contact</label>
+                <input type="text" name="emergency_contact" class="form-control" placeholder="108 / +91 44 9999" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Departments Offered (Comma separated)</label>
+            <input type="text" name="departments" class="form-control" placeholder="Cardiology, Neurology, Orthopedics, General Medicine" required>
+        </div>
+
+        <div class="form-group">
+            <label>About Hospital</label>
+            <textarea name="about" class="form-control" rows="2" placeholder="Premier tertiary healthcare hospital..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+            <i class="fas fa-check"></i> Register Branch
+        </button>
+    </form>
+</div>
+{% endblock %}
