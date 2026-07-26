@@ -17,9 +17,9 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Initialize and Seed Database
-with app.app_context():
-    init_db()
-    seed_database()
+# with app.app_context():
+#     init_db()
+#     seed_database()
 
 # Register Blueprints
 app.register_blueprint(auth_bp)

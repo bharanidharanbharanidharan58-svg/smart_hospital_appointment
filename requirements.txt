@@ -1,2 +1,6 @@
-Flask
+Flask==3.0.0
+Flask-SQLAlchemy
+Flask-Login
 gunicorn
+SQLAlchemy
+requests
