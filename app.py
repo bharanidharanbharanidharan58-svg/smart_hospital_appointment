@@ -8,6 +8,7 @@ from models.doctor import DoctorModel
 from routes.auth_routes import auth_bp
 from routes.patient_routes import patient_bp
 from routes.doctor_routes import doctor_bp
+from routes.admin_routes import admin_bp
 
 
 app = Flask(__name__)
@@ -17,11 +18,12 @@ app.config.from_object(Config)
 app.register_blueprint(auth_bp)
 app.register_blueprint(patient_bp)
 app.register_blueprint(doctor_bp)
+app.register_blueprint(admin_bp)
 
 
 @app.route("/")
 def home():
-    return "Step 5 OK"
+    return "Step 6 OK"
 
 
 if __name__ == "__main__":
