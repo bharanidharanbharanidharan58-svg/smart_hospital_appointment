@@ -22,11 +22,13 @@ def dashboard():
     past = [a for a in appointments if a['status'] in ('Completed', 'Cancelled', 'Rejected')]
     
     return render_template('patient/dashboard.html',
-                           patient=patient,
-                           appointments=appointments,
-                           upcoming_count=len(upcoming),
-                           completed_count=len([a for a in appointments if a['status'] == 'Completed']),
-                           hospitals=hospitals)
+                       patient=patient,
+                       user_name=patient['name'],
+                       appointments=appointments,
+                       upcoming_count=len(upcoming),
+                       completed_count=len([a for a in appointments if a['status'] == 'Completed']),
+                       hospitals=hospitals,
+                       doctors=doctors)
 
 @patient_bp.route('/book', methods=['GET', 'POST'])
 @patient_required
