@@ -105,11 +105,10 @@ a:hover {
 }
 
 .brand-logo i {
-    font-size: 28px;
-    background: linear-gradient(135deg, #2563eb, #06b6d4);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
+  font-size: 28px;
+  background: linear-gradient(135deg, #2563eb, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .nav-menu {

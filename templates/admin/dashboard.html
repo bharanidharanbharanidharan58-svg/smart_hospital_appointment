@@ -1,131 +1,101 @@
 {% extends "base.html" %}
 
-{% block title %}Patient Dashboard - Aura Health{% endblock %}
+{% block title %}Admin Enterprise Analytics - Aura Health{% endblock %}
 
-{% block header_title %}Patient Command Center{% endblock %}
+{% block header_title %}System Enterprise Command & Analytics Dashboard{% endblock %}
 
 {% block content %}
-<!-- Patient Info Banner -->
-<div class="glass-panel" style="padding: 24px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-    <div style="display: flex; align-items: center; gap: 16px;">
-        <div class="avatar" style="width: 56px; height: 56px; background: linear-gradient(135deg, #2563eb, #06b6d4); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800;">
-            {{ patient.name[0] }}
-        </div>
-        <div>
-            <h3 style="font-size: 20px; font-weight: 700;">{{ patient.name }}</h3>
-            <span style="font-size: 13px; color: var(--text-muted);">
-                Age: {{ patient.age }} yrs • Gender: {{ patient.gender }} • Blood Group: <strong style="color: var(--danger);">{{ patient.blood_group }}</strong>
-            </span>
-        </div>
-    </div>
-    
-    <div style="display: flex; gap: 12px;">
-        <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">
-            <i class="fas fa-calendar-plus"></i> Book New Appointment
-        </a>
-        <a href="{{ url_for('patient.ai_symptom') }}" class="btn btn-outline">
-            <i class="fas fa-stethoscope"></i> AI Symptom Checker
-        </a>
-    </div>
-</div>
-
-<!-- Stats -->
-<div class="grid-3" style="margin-bottom: 32px;">
+<!-- Top Metrics Grid -->
+<div class="grid-4" style="margin-bottom: 32px;">
     <div class="glass-panel stat-card">
-        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-icon"><i class="fas fa-hospital"></i></div>
         <div>
-            <div class="stat-val">{{ upcoming_count }}</div>
-            <div class="stat-label">Upcoming Appointments</div>
+            <div class="stat-val">{{ hospitals|length }}</div>
+            <div class="stat-label">Registered Hospitals</div>
         </div>
     </div>
     <div class="glass-panel stat-card">
-        <div class="stat-icon" style="background: rgba(16,185,129,0.15); color: #10b981;"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-icon" style="background: rgba(16,185,129,0.15); color: #10b981;"><i class="fas fa-user-md"></i></div>
         <div>
-            <div class="stat-val">{{ completed_count }}</div>
-            <div class="stat-label">Completed Consultations</div>
+            <div class="stat-val">{{ doctors|length }}</div>
+            <div class="stat-label">Active Doctors</div>
         </div>
     </div>
     <div class="glass-panel stat-card">
-        <div class="stat-icon" style="background: rgba(6,182,212,0.15); color: #06b6d4;"><i class="fas fa-hospital"></i></div>
+        <div class="stat-icon" style="background: rgba(6,182,212,0.15); color: #06b6d4;"><i class="fas fa-users"></i></div>
         <div>
-            <div class="stat-val">10</div>
-            <div class="stat-label">Connected Network Hospitals</div>
+            <div class="stat-val">{{ patients|length }}</div>
+            <div class="stat-label">Registered Patients</div>
+        </div>
+    </div>
+    <div class="glass-panel stat-card">
+        <div class="stat-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;"><i class="fas fa-wallet"></i></div>
+        <div>
+            <div class="stat-val">₹{{ "%.0f"|format(total_revenue) }}</div>
+            <div class="stat-label">Total Revenue Generated</div>
         </div>
     </div>
 </div>
 
-<!-- Appointments Table -->
+<!-- Chart Visualizations -->
+<div class="grid-2" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px;">
+    <!-- Revenue Bar Chart -->
+    <div class="glass-panel" style="padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;"><i class="fas fa-chart-bar"></i> Hospital Revenue Breakdown (₹)</h3>
+        <canvas id="revenueChart" height="220"></canvas>
+    </div>
+
+    <!-- Department Doughnut Chart -->
+    <div class="glass-panel" style="padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;"><i class="fas fa-chart-pie"></i> Specialty Patient Share</h3>
+        <canvas id="deptChart" height="220"></canvas>
+    </div>
+</div>
+
+<!-- Recent Appointments & Hospital Performance Table -->
 <div class="glass-panel" style="padding: 24px;">
-    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;"><i class="fas fa-calendar-alt"></i> Your Appointments & Live Queue Tokens</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 700;"><i class="fas fa-list-alt"></i> Recent Network Appointments</h3>
+        <a href="{{ url_for('admin.appointments') }}" class="btn btn-outline btn-sm">View All {{ appointments|length }} Records</a>
+    </div>
 
-    {% if appointments %}
-        <div class="table-responsive">
-            <table class="custom-table">
-                <thead>
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Ref #</th>
+                    <th>Patient</th>
+                    <th>Hospital Branch</th>
+                    <th>Doctor</th>
+                    <th>Date & Slot</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for apt in appointments[:6] %}
                     <tr>
-                        <th>Smart Token</th>
-                        <th>Hospital & Specialist</th>
-                        <th>Date & Slot</th>
-                        <th>Queue Position</th>
-                        <th>Est. Wait</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <td><strong>{{ apt.appointment_number }}</strong></td>
+                        <td>{{ apt.patient_name }}</td>
+                        <td>{{ apt.hospital_name }}</td>
+                        <td>Dr. {{ apt.doctor_name }}</td>
+                        <td>{{ apt.appointment_date }} ({{ apt.time_slot }})</td>
+                        <td>₹{{ apt.consultation_fee }}</td>
+                        <td>
+                            {% if apt.status == 'Approved' or apt.status == 'Completed' %}
+                                <span class="badge badge-success">{{ apt.status }}</span>
+                            {% else %}
+                                <span class="badge badge-warning">{{ apt.status }}</span>
+                            {% endif %}
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for apt in appointments %}
-                        <tr>
-                            <td>
-                                <strong style="color: var(--primary); font-size: 15px;">{{ apt.token_number }}</strong><br>
-                                <span style="font-size: 11px; color: var(--text-muted);">#{{ apt.appointment_number }}</span>
-                            </td>
-                            <td>
-                                <strong style="font-size: 14px;">Dr. {{ apt.doctor_name }}</strong><br>
-                                <span style="font-size: 12px; color: var(--text-muted);">{{ apt.hospital_name }} ({{ apt.department_name }})</span>
-                            </td>
-                            <td>
-                                <div><i class="fas fa-calendar-day"></i> {{ apt.appointment_date }}</div>
-                                <div style="font-size: 12px; color: var(--text-muted);"><i class="fas fa-clock"></i> {{ apt.time_slot }}</div>
-                            </td>
-                            <td>
-                                <span class="badge badge-info">Position #{{ apt.queue_position }}</span>
-                            </td>
-                            <td>
-                                <span style="font-weight: 600; color: var(--warning);">~{{ apt.predicted_wait_time }} mins</span>
-                            </td>
-                            <td>
-                                {% if apt.status == 'Approved' or apt.status == 'Pending' %}
-                                    <span class="badge badge-success">Approved / Active</span>
-                                {% elif apt.status == 'Completed' %}
-                                    <span class="badge badge-info">Completed</span>
-                                {% else %}
-                                    <span class="badge badge-danger">{{ apt.status }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 6px;">
-                                    <a href="{{ url_for('patient.view_receipt', appointment_id=apt.id) }}" class="btn btn-outline btn-sm" title="View Token Receipt">
-                                        <i class="fas fa-receipt"></i> Receipt
-                                    </a>
-                                    {% if apt.status in ('Pending', 'Approved') %}
-                                        <form action="{{ url_for('patient.cancel_appointment', appointment_id=apt.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Cancel Appointment">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-            <i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 12px; opacity: 0.5;"></i>
-            <p>No appointments booked yet. Click "Book New Appointment" to select a hospital and specialist.</p>
-        </div>
-    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin_charts.js') }}"></script>
 {% endblock %}

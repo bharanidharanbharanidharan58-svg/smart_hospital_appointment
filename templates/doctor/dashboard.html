@@ -1,101 +1,144 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Enterprise Analytics - Aura Health{% endblock %}
+{% block title %}Doctor Console - Today's Queue{% endblock %}
 
-{% block header_title %}System Enterprise Command & Analytics Dashboard{% endblock %}
+{% block header_title %}Doctor Command Dashboard{% endblock %}
 
 {% block content %}
-<!-- Top Metrics Grid -->
-<div class="grid-4" style="margin-bottom: 32px;">
-    <div class="glass-panel stat-card">
-        <div class="stat-icon"><i class="fas fa-hospital"></i></div>
+<!-- Doctor Status Header -->
+<div class="glass-panel" style="padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <img src="{{ doctor.photo }}" alt="{{ doctor.name }}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary);">
         <div>
-            <div class="stat-val">{{ hospitals|length }}</div>
-            <div class="stat-label">Registered Hospitals</div>
+            <h3 style="font-size: 20px; font-weight: 700;">Dr. {{ doctor.name }}</h3>
+            <span style="font-size: 13px; color: var(--text-muted);">
+                {{ doctor.specialization }} • <strong>{{ doctor.hospital_name }}</strong> ({{ doctor.department_name }})
+            </span>
+        </div>
+    </div>
+
+    <!-- Status Toggle -->
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 13px; font-weight: 600;">Current Status:</span>
+        <form action="{{ url_for('doctor.update_status') }}" method="POST" style="display: flex; gap: 6px;">
+            <button type="submit" name="status" value="Online" class="btn btn-sm {% if doctor.status == 'Online' %}btn-primary{% else %}btn-outline{% endif %}">
+                <i class="fas fa-signal"></i> Online
+            </button>
+            <button type="submit" name="status" value="Busy" class="btn btn-sm {% if doctor.status == 'Busy' %}btn-primary{% else %}btn-outline{% endif %}">
+                <i class="fas fa-user-clock"></i> Busy
+            </button>
+            <button type="submit" name="status" value="On Leave" class="btn btn-sm {% if doctor.status == 'On Leave' %}btn-danger{% else %}btn-outline{% endif %}">
+                <i class="fas fa-umbrella-beach"></i> On Leave
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Queue Stats -->
+<div class="grid-3" style="margin-bottom: 28px;">
+    <div class="glass-panel stat-card">
+        <div class="stat-icon"><i class="fas fa-list-ol"></i></div>
+        <div>
+            <div class="stat-val">{{ queue|length }}</div>
+            <div class="stat-label">Total Appointments Today ({{ today_date }})</div>
         </div>
     </div>
     <div class="glass-panel stat-card">
-        <div class="stat-icon" style="background: rgba(16,185,129,0.15); color: #10b981;"><i class="fas fa-user-md"></i></div>
+        <div class="stat-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;"><i class="fas fa-hourglass-half"></i></div>
         <div>
-            <div class="stat-val">{{ doctors|length }}</div>
-            <div class="stat-label">Active Doctors</div>
+            <div class="stat-val">{{ pending_count }}</div>
+            <div class="stat-label">Pending In Queue</div>
         </div>
     </div>
     <div class="glass-panel stat-card">
-        <div class="stat-icon" style="background: rgba(6,182,212,0.15); color: #06b6d4;"><i class="fas fa-users"></i></div>
+        <div class="stat-icon" style="background: rgba(16,185,129,0.15); color: #10b981;"><i class="fas fa-check-double"></i></div>
         <div>
-            <div class="stat-val">{{ patients|length }}</div>
-            <div class="stat-label">Registered Patients</div>
-        </div>
-    </div>
-    <div class="glass-panel stat-card">
-        <div class="stat-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;"><i class="fas fa-wallet"></i></div>
-        <div>
-            <div class="stat-val">₹{{ "%.0f"|format(total_revenue) }}</div>
-            <div class="stat-label">Total Revenue Generated</div>
+            <div class="stat-val">{{ completed_count }}</div>
+            <div class="stat-label">Completed Consultations</div>
         </div>
     </div>
 </div>
 
-<!-- Chart Visualizations -->
-<div class="grid-2" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px;">
-    <!-- Revenue Bar Chart -->
-    <div class="glass-panel" style="padding: 24px;">
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;"><i class="fas fa-chart-bar"></i> Hospital Revenue Breakdown (₹)</h3>
-        <canvas id="revenueChart" height="220"></canvas>
-    </div>
-
-    <!-- Department Doughnut Chart -->
-    <div class="glass-panel" style="padding: 24px;">
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;"><i class="fas fa-chart-pie"></i> Specialty Patient Share</h3>
-        <canvas id="deptChart" height="220"></canvas>
-    </div>
-</div>
-
-<!-- Recent Appointments & Hospital Performance Table -->
+<!-- Queue Table -->
 <div class="glass-panel" style="padding: 24px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="font-size: 18px; font-weight: 700;"><i class="fas fa-list-alt"></i> Recent Network Appointments</h3>
-        <a href="{{ url_for('admin.appointments') }}" class="btn btn-outline btn-sm">View All {{ appointments|length }} Records</a>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="font-size: 18px; font-weight: 700;"><i class="fas fa-user-clock"></i> Patient Queue Management</h3>
+        <input type="text" id="queue-search-input" class="form-control" style="width: 250px;" placeholder="Search patient or token...">
     </div>
 
-    <div class="table-responsive">
-        <table class="custom-table">
-            <thead>
-                <tr>
-                    <th>Ref #</th>
-                    <th>Patient</th>
-                    <th>Hospital Branch</th>
-                    <th>Doctor</th>
-                    <th>Date & Slot</th>
-                    <th>Fee</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for apt in appointments[:6] %}
+    {% if queue %}
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
                     <tr>
-                        <td><strong>{{ apt.appointment_number }}</strong></td>
-                        <td>{{ apt.patient_name }}</td>
-                        <td>{{ apt.hospital_name }}</td>
-                        <td>Dr. {{ apt.doctor_name }}</td>
-                        <td>{{ apt.appointment_date }} ({{ apt.time_slot }})</td>
-                        <td>₹{{ apt.consultation_fee }}</td>
-                        <td>
-                            {% if apt.status == 'Approved' or apt.status == 'Completed' %}
-                                <span class="badge badge-success">{{ apt.status }}</span>
-                            {% else %}
-                                <span class="badge badge-warning">{{ apt.status }}</span>
-                            {% endif %}
-                        </td>
+                        <th>Pos</th>
+                        <th>Token & Ref</th>
+                        <th>Patient Name & Vitals</th>
+                        <th>Slot Time</th>
+                        <th>Reported Symptoms</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    {% for apt in queue %}
+                        <tr class="queue-table-row" data-status="{{ apt.status }}">
+                            <td>
+                                <strong style="font-size: 16px; color: var(--primary);">#{{ apt.queue_position }}</strong>
+                            </td>
+                            <td>
+                                <strong style="font-size: 15px;">{{ apt.token_number }}</strong><br>
+                                <span style="font-size: 11px; color: var(--text-muted);">{{ apt.appointment_number }}</span>
+                            </td>
+                            <td>
+                                <strong style="font-size: 14px;">{{ apt.patient_name }}</strong><br>
+                                <span style="font-size: 12px; color: var(--text-muted);">
+                                    {{ apt.patient_age }} yrs • {{ apt.patient_gender }} • <strong style="color: var(--danger);">{{ apt.patient_blood_group }}</strong>
+                                </span>
+                            </td>
+                            <td>
+                                <div><i class="fas fa-clock"></i> {{ apt.time_slot }}</div>
+                            </td>
+                            <td>
+                                <span style="font-size: 13px; color: var(--text-main);">{{ apt.symptoms or 'General Consultation' }}</span>
+                            </td>
+                            <td>
+                                {% if apt.status == 'Approved' or apt.status == 'Pending' %}
+                                    <span class="badge badge-warning">Active Queue</span>
+                                {% elif apt.status == 'Completed' %}
+                                    <span class="badge badge-success">Completed</span>
+                                {% else %}
+                                    <span class="badge badge-danger">{{ apt.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 6px;">
+                                    <a href="{{ url_for('doctor.consultation', appointment_id=apt.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-stethoscope"></i> Consult & Rx
+                                    </a>
+                                    {% if apt.status in ('Pending', 'Approved') %}
+                                        <form action="{{ url_for('doctor.update_appointment_action', appointment_id=apt.id) }}" method="POST" style="display: inline;">
+                                            <button type="submit" name="action" value="complete" class="btn btn-outline btn-sm" title="Mark Complete">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+            <i class="fas fa-calendar-check" style="font-size: 40px; margin-bottom: 12px; opacity: 0.5;"></i>
+            <p>No patients currently in your queue for today.</p>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/admin_charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/doctor_queue.js') }}"></script>
 {% endblock %}

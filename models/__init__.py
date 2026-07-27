@@ -1,1 +1,1 @@
-# Models package for Aura Health
+# Utils package for Aura Health
